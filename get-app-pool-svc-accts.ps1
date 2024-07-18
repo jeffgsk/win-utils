@@ -8,15 +8,14 @@ $appPoolList = @()
 foreach ($appPool in $appPools) {
     $appPoolName = $appPool.Name
     $processModel = Get-ItemProperty "IIS:\AppPools\$appPoolName" -Name processModel
-    $identityType = $processModel.processModel.identityType
 
-    switch ($identityType) {
-        0 { $identity = "LocalSystem" }
-        1 { $identity = "LocalService" }
-        2 { $identity = "NetworkService" }
-        3 { $identity = "SpecificUser: $($processModel.processModel.userName)" }
-        4 { $identity = "ApplicationPoolIdentity" }
-        default { $identity = "Unknown" }
+    switch ($processModel.identityType) {
+        "LocalSystem"         { $identity = "LocalSystem" }
+        "LocalService"        { $identity = "LocalService" }
+        "NetworkService"      { $identity = "NetworkService" }
+        "ApplicationPoolIdentity" { $identity = "ApplicationPoolIdentity" }
+        "SpecificUser"        { $identity = "SpecificUser: $($processModel.userName)" }
+        default               { $identity = "Unknown" }
     }
 
     $appPoolInfo = [PSCustomObject]@{
@@ -28,6 +27,6 @@ foreach ($appPool in $appPools) {
 }
 
 # Convert to JSON and export to file
-$appPoolList | ConvertTo-Json | Out-File -FilePath $outputFile -Force
+$appPoolList | ConvertTo-Json -Depth 3 | Out-File -FilePath $outputFile -Force
 
 Write-Output "The application pool information has been exported to $outputFile"
